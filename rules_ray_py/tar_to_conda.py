@@ -69,6 +69,18 @@ def write_condarc(tmp_dir: str):
     condarc_path = os.path.join(tmp_dir, ".condarc")
     with open(condarc_path, "w") as f:
         f.write(CONDARC)
+    return condarc_path
+
+
+def build_conda_package(
+    tmp_dir: str,
+    condarc_path: str,
+    conda_bin_path: str,
+):
+    conda_build_cmd = f"CONDARC={condarc_path} {conda_bin_path} build {tmp_dir} --no-test --output-folder {tmp_dir} --no-anaconda-upload"
+    result = os.system(conda_build_cmd)
+    if result != 0:
+        raise RuntimeError(f"Conda build failed with status {result}")
 
 
 def convert_package(
@@ -76,27 +88,33 @@ def convert_package(
     output_conda: str,
     tmp_dir: str,
     python_version_string: str,
+    conda_bin_path: str,
 ):
     shutil.copy(input_tar_zst, tmp_dir)
 
     write_meta_yaml(tmp_dir)
     write_build_sh(tmp_dir, python_version_string=python_version_string)
     write_post_link_sh(tmp_dir, python_version_string=python_version_string)
-    write_condarc(tmp_dir)
+    condarc_path = write_condarc(tmp_dir)
 
-    # Simulate writing a file to the temporary directory
-    with open("foo.txt", "w") as f:
-        pass
+    build_conda_package(
+        tmp_dir,
+        condarc_path=condarc_path,
+        conda_bin_path=conda_bin_path,
+    )
 
-    # Create an empty file at the output location
-    with open(output_conda, "w") as f:
-        pass
+    shutil.move(os.path.join(tmp_dir, "linux-64/bazel_package-0.0.0-0.conda"), output_conda)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Convert tar.zst file to conda package")
     parser.add_argument("--input_tar_zst", required=True, help="Path to input tar.zst file")
     parser.add_argument("--output_conda", required=True, help="Path to output conda package")
+    parser.add_argument(
+        "--conda_bin_path",
+        required=True,
+        help="Path to conda binary.",
+    )
     parser.add_argument(
         "--python_version_string",
         default="python3.12",
@@ -110,6 +128,7 @@ def main():
             args.output_conda,
             temp_dir,
             python_version_string=args.python_version_string,
+            conda_bin_path=args.conda_bin_path,
         )
 
 
