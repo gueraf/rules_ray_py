@@ -12,17 +12,16 @@ def py_conda(name, wrapped_py_binary, conda_bin_path="~/miniconda3/bin/conda"):
         cmd="ls " + conda_bin_path + "| xargs -I {} ln -s {} $@",
     )
 
-    run_binary(
+    native.genrule(
         name=name,
-        srcs=[
-            name + "_py_tar_zst.tar.zst",
-            "conda_cli",
-        ],
+        srcs=[name + "_py_tar_zst.tar.zst", "conda_cli"],
         outs=[name + ".conda"],
-        tool="@rules_ray_py//rules_ray_py:tar_to_conda",
-        args=[
-            "--conda_bin_path=$(location conda_cli)",
-            "--input_tar_zst=$(location " + name + "_py_tar_zst.tar.zst)",
-            "--output_conda=$(location " + name + ".conda)",
-        ],
+        cmd="$(location @rules_ray_py//rules_ray_py:tar_to_conda) --conda_bin_path=$(location conda_cli) --input_tar_zst=$(location "
+        + name
+        + "_py_tar_zst.tar.zst) --output_conda=$(location "
+        + name
+        + ".conda)",
+        tools=["@rules_ray_py//rules_ray_py:tar_to_conda"],
+        # Note: Sandboxing doesn't work due to https://github.com/conda/conda-build/issues/3161 :(
+        local=True,
     )

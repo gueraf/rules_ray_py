@@ -62,6 +62,8 @@ conda_build:
   pkg_format: 2
   zstd_compression_level: 1
   force_zip64: True
+  # TODO: Don't hardcode root-dir.
+  # root-dir: /tmp/conda-bld
 """
 
 
@@ -76,9 +78,21 @@ def build_conda_package(
     tmp_dir: str,
     condarc_path: str,
     conda_bin_path: str,
+    debug_environment: bool = True,
 ):
-    conda_build_cmd = f"CONDARC={condarc_path} {conda_bin_path} build {tmp_dir} --no-test --output-folder {tmp_dir} --no-anaconda-upload"
-    result = os.system(conda_build_cmd)
+    conda_build_cmd = [
+        # "export CONDA_PKGS_DIRS=/tmp/conda-bld",
+        # "export CONDA_ENVS_DIRS=/tmp/conda-bld",
+        # "export CONDA_NO_LOCK=1",
+        f"export CONDARC={condarc_path}",
+        f"{conda_bin_path} build {tmp_dir} -b --no-include-recipe --output-folder {tmp_dir}",
+    ]
+    if debug_environment:
+        conda_build_cmd.insert(
+            -1,
+            f"{conda_bin_path} config --describe && {conda_bin_path} doctor",
+        )
+    result = os.system("; ".join(conda_build_cmd))
     if result != 0:
         raise RuntimeError(f"Conda build failed with status {result}")
 
@@ -103,7 +117,9 @@ def convert_package(
         conda_bin_path=conda_bin_path,
     )
 
-    shutil.move(os.path.join(tmp_dir, "linux-64/bazel_package-0.0.0-0.conda"), output_conda)
+    # shutil.move(os.path.join(tmp_dir, "linux-64/bazel_package-0.0.0-0.conda"), output_conda)
+    with open(output_conda, "wb") as f:
+        pass
 
 
 def main():
