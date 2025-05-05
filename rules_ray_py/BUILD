@@ -5,3 +5,9 @@ py_binary(
     srcs = ["tar_to_conda.py"],
     visibility = ["//visibility:public"],
 )
+
+py_binary(
+    name = "submit_conda",
+    srcs = ["submit_conda.py"],
+    visibility = ["//visibility:public"],
+)
