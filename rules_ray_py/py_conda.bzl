@@ -6,17 +6,22 @@ def py_conda(name, wrapped_py_binary, conda_bin_path="~/miniconda3/bin/conda"):
     py_tar_zst(name=name + "_py_tar_zst", wrapped_py_binary=wrapped_py_binary)
 
     native.genrule(
-        name="conda_cli",
+        name=name + "_conda_cli",
         srcs=[],
-        outs=["conda_cli"],
+        outs=[name + "_conda_cli"],
         cmd="ls " + conda_bin_path + "| xargs -I {} ln -s {} $@",
     )
 
     native.genrule(
         name=name,
-        srcs=[name + "_py_tar_zst.tar.zst", "conda_cli"],
+        srcs=[
+            name + "_py_tar_zst.tar.zst",
+            name + "_conda_cli",
+        ],
         outs=[name + ".conda"],
-        cmd="$(location @rules_ray_py//rules_ray_py:tar_to_conda) --conda_bin_path=$(location conda_cli) --input_tar_zst=$(location "
+        cmd="$(location @rules_ray_py//rules_ray_py:tar_to_conda) --conda_bin_path=$(location "
+        + name
+        + "_conda_cli) --input_tar_zst=$(location "
         + name
         + "_py_tar_zst.tar.zst) --output_conda=$(location "
         + name

@@ -1,17 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary")
-load("@rules_python//python:packaging.bzl", "py_package")
-load("py_tar_zst.bzl", "py_tar_zst")
-
-
-# genrule(
-#     name = "concat_all_files",
-#     srcs = [
-#         "//some:files",  # a filegroup with multiple files in it ==> $(locations)
-#         "//other:gen",   # a genrule with a single output ==> $(location)
-#     ],
-#     outs = ["concatenated.txt"],
-#     cmd = "cat $(locations //some:files) $(location //other:gen) > $@",
-# )
+load("py_conda.bzl", "py_conda")
 
 
 def _demo_binary_impl(ctx):
@@ -39,6 +26,6 @@ def ray_job(
     name,
     wrapped_py_binary,
 ):
-    py_tar_zst(name=name + "_py_tar_zst", wrapped_py_binary=wrapped_py_binary)
+    py_conda(name=name + "_ray_job_conda", wrapped_py_binary=wrapped_py_binary)
 
     demo_binary(name=name)
