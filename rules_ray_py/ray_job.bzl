@@ -36,6 +36,12 @@ def ray_job(
         + [
             "--nfs_packages_folder=" + nfs_packages_folder,
             "--input_conda=$(location " + name + "_ray_job_conda)",
+            # TODO: This is a strong assumption. We should use the actual name of the file.
+            "--input_entrypoint_file="
+            + native.package_name()
+            + "/"
+            + Label(wrapped_py_binary).name
+            + ".py",
             "--ray_bin_path=$(location " + name + "_ray_cli)",
             "--conda_bin_path=$(location " + name + "_ray_job_conda_conda_cli)",
             "--ray_cluster_address=" + ray_cluster_address,

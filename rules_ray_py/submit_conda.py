@@ -20,6 +20,7 @@ def submit_job(
     ray_bin_path: str,
     ray_cluster_address: str,
     package_folder: str,
+    input_entrypoint_file: str,
 ):
     # https://docs.ray.io/en/latest/ray-core/handling-dependencies.html#specifying-a-runtime-environment-per-job
     runtime_env = {
@@ -67,6 +68,9 @@ def main():
     parser = argparse.ArgumentParser(description="Submits a conda package to a remote ray cluster.")
     parser.add_argument("--nfs_packages_folder", required=True, help="Path to NFS packages folder")
     parser.add_argument("--input_conda", required=True, help="Path to input conda package")
+    parser.add_argument(
+        "--input_entrypoint_file", required=True, help="Path to input entrypoint file"
+    )
     parser.add_argument("--ray_cluster_address", default="auto", help="Ray cluster address. ")
     # TODO: Maybe also use RAY_ADDRESS env variable.
     parser.add_argument(
@@ -92,6 +96,7 @@ def main():
         ray_bin_path=args.ray_bin_path,
         ray_cluster_address=args.ray_cluster_address,
         package_folder=package_folder,
+        input_entrypoint_file=args.input_entrypoint_file,
     )
 
     # TODO: Add feature to (not) keep following the job logs. Add --no-wait to command.
