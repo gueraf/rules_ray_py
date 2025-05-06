@@ -1,5 +1,4 @@
 load("py_tar_zst.bzl", "py_tar_zst")
-load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 
 
 def py_conda(name, wrapped_py_binary, conda_bin_path="~/miniconda3/bin/conda"):
