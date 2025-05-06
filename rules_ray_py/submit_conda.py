@@ -11,22 +11,27 @@ def make_conda_index(conda_bin_path: str, package_folder: str):
         raise RuntimeError(f"Conda index failed with status {result}")
 
 
-def submit_job(ray_bin_path: str, ray_cluster_address: str, package_folder: str):
+def submit_job(ray_bin_path: str, ray_cluster_address: str, package_folder: str, package_name: str):
     # https://docs.ray.io/en/latest/ray-core/handling-dependencies.html#specifying-a-runtime-environment-per-job
     runtime_env = {
         "conda": {
             "channels": ["file://" + package_folder],
             "dependencies": [
-                "bazel_package",
+                package_name,
             ],
         },
+        "env_vars": {},
     }
+    entrypoint = "; ".join(
+        [
+            "which python3",
+        ]
+    )
     ray_submit_cmd = (
         f"{ray_bin_path} job submit "
         + f"--address={ray_cluster_address} "
         + f"--runtime-env-json='{json.dumps(runtime_env)}' "
-        + "-- /bin/bash -c 'which python3'"
-        # + "python -c 'import time; time.sleep(10)'"
+        + f"-- {entrypoint}"
     )
     result = os.system(ray_submit_cmd)
     if result != 0:
@@ -62,6 +67,7 @@ def main():
         ray_bin_path=args.ray_bin_path,
         ray_cluster_address=args.ray_cluster_address,
         package_folder=package_folder,
+        package_name=os.path.basename(args.input_conda).split("-")[0],
     )
 
     # TODO: Add feature to (not) keep following the job logs.

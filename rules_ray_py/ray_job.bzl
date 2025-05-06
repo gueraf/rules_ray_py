@@ -29,8 +29,6 @@ def ray_job(
         srcs=["@rules_ray_py//rules_ray_py:submit_conda.py"],
         data=[
             name + "_ray_job_conda",
-            # "@rules_ray_py//rules_ray_py:ray_cli",
-            # "@rules_ray_py//rules_ray_py:conda_cli",
             name + "_ray_job_conda_conda_cli",
             name + "_ray_cli",
         ],
@@ -40,6 +38,6 @@ def ray_job(
             "--input_conda=$(location " + name + "_ray_job_conda)",
             "--ray_bin_path=$(location " + name + "_ray_cli)",
             "--conda_bin_path=$(location " + name + "_ray_job_conda_conda_cli)",
-            # "--ray_cluster_address=" + ray_cluster_address,
+            "--ray_cluster_address=" + ray_cluster_address,
         ],
     )
