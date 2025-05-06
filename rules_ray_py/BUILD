@@ -11,3 +11,8 @@ py_binary(
     srcs = ["submit_conda.py"],
     visibility = ["//visibility:public"],
 )
+
+exports_files(
+    ["submit_conda.py"],
+    visibility = ["//visibility:public"],
+)
