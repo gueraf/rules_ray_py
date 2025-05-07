@@ -11,7 +11,7 @@ Work in progress, super hacky and likely never stable!
 
 # Quickstart
 ## Step 1: MODULE.bazel
-```
+```python
 # ...
 bazel_dep(name = "rules_ray_py", version = "0.0.0")
 git_override(
