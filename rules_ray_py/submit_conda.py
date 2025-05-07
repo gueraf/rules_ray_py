@@ -40,17 +40,11 @@ def submit_job(
             "echo PYTHON_BIN_PATH = \\$PYTHON_BIN_PATH",
             'export PYTHON_VERSION=\\$(python3 --version | grep -oP "3\\.\\d+")',
             "echo PYTHON_VERSION = \\$PYTHON_VERSION",
-            # # 'which python3 | sed "s:/bin/python3::"',
             'export BASE_DIR=\\$(which python3 | sed "s:/bin/python3:/lib/python\\$PYTHON_VERSION:")',
             "echo BASE_DIR = \\$BASE_DIR",
             "export PYTHONPATH=\\$BASE_DIR/:\\$BASE_DIR/site-packages/",
             "echo PYTHONPATH = \\$PYTHONPATH",
-            'python3 -c "import sys; print(sys.path)"',
-            'python3 -c "import absl; print(absl.__file__)"',
-            f"echo {input_entrypoint_file}",
-            # /tmp/ray/session_2025-05-06_17-24-51_011325_1829685/runtime_resources/conda/84f9910e5c3f82d3ccf005c31f75fe8c08b9bcdc/bin/python3
-            # /tmp/ray/session_2025-05-06_17-24-51_011325_1829685/runtime_resources/conda/84f9910e5c3f82d3ccf005c31f75fe8c08b9bcdc/lib/python3.12/examples/py_hello_world/hello_world.py
-            # f"python3 {input_entrypoint_file}",
+            f"python3 \\$BASE_DIR/{input_entrypoint_file}",
         ]
     )
     ray_submit_cmd = (
@@ -58,9 +52,6 @@ def submit_job(
         + f"--address={ray_cluster_address} "
         + f"--runtime-env-json='{json.dumps(runtime_env)}' "
         + f"-- /bin/bash -c '{entrypoint}'"
-        # + f'-- /bin/sh -c "echo hi && foo=bar && echo \\$foo && echo \\$BAZ && which python3" '
-        # f"""-- /bin/bash -c "echo hi && which python3 && FOO=bar && echo \\$FOO && echo \\$BAZ && echo \\$PATH" """
-        # + '-- /bin/bash -c "echo hi && export FOO=bar ; echo \\$FOO" '
     )
     result = os.system(ray_submit_cmd)
     if result != 0:
