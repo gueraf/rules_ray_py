@@ -33,7 +33,10 @@ def submit_job(
                 "bazel_package",
             ],
         },
-        "env_vars": {},
+        "env_vars": {
+            "PYTHONNOUSERSITE": "1",
+            "PYTHONUSERBASE": "/dev/null",
+        },
     }
     entrypoint = " && ".join(
         [
