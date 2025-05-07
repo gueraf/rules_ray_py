@@ -21,6 +21,7 @@ def submit_job(
     ray_cluster_address: str,
     package_folder: str,
     input_entrypoint_file: str,
+    unknownargs: list[str],
 ):
     # https://docs.ray.io/en/latest/ray-core/handling-dependencies.html#specifying-a-runtime-environment-per-job
     runtime_env = {
@@ -44,7 +45,7 @@ def submit_job(
             "echo BASE_DIR = \\$BASE_DIR",
             "export PYTHONPATH=\\$BASE_DIR/:\\$BASE_DIR/site-packages/",
             "echo PYTHONPATH = \\$PYTHONPATH",
-            f"python3 \\$BASE_DIR/{input_entrypoint_file}",
+            f"python3 \\$BASE_DIR/{input_entrypoint_file} {' '.join(unknownargs)}",
         ]
     )
     ray_submit_cmd = (
@@ -77,7 +78,7 @@ def main():
         required=True,
         help="Path to ray cli binary.",
     )
-    args = parser.parse_args()
+    args, unknownargs = parser.parse_known_args()
 
     package_folder = os.path.join(args.nfs_packages_folder, uuid.uuid4().hex)
 
@@ -91,6 +92,7 @@ def main():
         ray_cluster_address=args.ray_cluster_address,
         package_folder=package_folder,
         input_entrypoint_file=args.input_entrypoint_file,
+        unknownargs=unknownargs,
     )
 
     # TODO: Add feature to (not) keep following the job logs. Add --no-wait to command.
