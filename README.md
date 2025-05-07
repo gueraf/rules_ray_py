@@ -1,6 +1,6 @@
 # rules_ray_py
 
-Work in progress and likely never stable!
+Work in progress, super hacky and likely never stable!
 
 Core Idea:
 - Use Bazel to build python applications (incl. pip dependency management); see e.g. https://github.com/gueraf/template_py.
