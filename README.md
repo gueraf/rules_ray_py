@@ -38,7 +38,7 @@ def main():
             },
         }
     )
-  # Do something
+    # Do something
 
 if __name__ == "__main__":
     main()
