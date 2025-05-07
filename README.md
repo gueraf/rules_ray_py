@@ -1,5 +1,16 @@
 # rules_ray_py
 
+Work in progress and likely never stable!
+
+Core Idea:
+- Use Bazel to build python applications (incl. pip dependency management); see e.g. https://github.com/gueraf/template_py.
+- Wrap a `py_binary` into `@rules_ray_py//rules_ray_py:ray_job` to
+  - Create a self-extracting conda capturing all dependencies.
+  - Copy the package to a NFS share that all ray workers can access.
+  - Use a (system-provided) ray cli to submit a job to a (remote) ray cluster such that the package is installed, and the application is started with correct PYTHONPATH set, etc.
+
+See https://github.com/gueraf/rules_ray_py_test for a working e2e example.
+
 # Setup
 ```shell
 sudo apt install pipx zstd
