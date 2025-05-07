@@ -18,13 +18,13 @@ true || ~/miniconda3/bin/conda init --all && \
 sudo apt install build-essential libssl-dev zlib1g-dev \
   libbz2-dev libreadline-dev libsqlite3-dev curl git \
   libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
-~/.pyenv/bin/pyenv install 3.13.2
+~/.pyenv/bin/pyenv install 3.12.3
 
-pipx install ray[default]==2.45.0 --python ~/.pyenv/versions/3.13.2/bin/python
+pipx install ray[default]==2.45.0 --python ~/.pyenv/versions/3.12.3/bin/python
 ```
 
 # Start a local ray cluster (for testing)
 ```shell
-ray start --head
+export RAY_CONDA_HOME=$(realpath ~/miniconda3/) && ray start --head
 # Dashboard: 127.0.0.1:8265
 ```
