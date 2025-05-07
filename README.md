@@ -16,7 +16,7 @@ Work in progress, super hacky and likely never stable!
 bazel_dep(name = "rules_ray_py", version = "0.0.0")
 git_override(
     module_name = "rules_ray_py",
-    commit = "4169aee30a0322c126e0dbbe9671d379f5e72457",
+    commit = "61287dda0221426649458d363f79ae7be1f46976",
     remote = "https://github.com/gueraf/rules_ray_py.git",
 )
 # ...
