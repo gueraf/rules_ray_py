@@ -26,6 +26,11 @@ git_override(
 ```python
 import os
 import ray
+import fancy_lib
+
+@ray.remote
+def use_fancy_lib():
+    return fancy_lib.magic_string
 
 def main():
     ray.init(
@@ -38,7 +43,7 @@ def main():
             },
         }
     )
-    # Do something
+    print(ray.get(use_fancy_lib.remote()))
 
 if __name__ == "__main__":
     main()
