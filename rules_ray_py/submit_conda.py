@@ -22,6 +22,7 @@ def submit_job(
     package_folder: str,
     input_entrypoint_file: str,
     unknownargs: list[str],
+    wait: bool,
 ):
     # https://docs.ray.io/en/latest/ray-core/handling-dependencies.html#specifying-a-runtime-environment-per-job
     runtime_env = {
@@ -55,6 +56,7 @@ def submit_job(
         f"{ray_bin_path} job submit "
         + f"--address={ray_cluster_address} "
         + f"--runtime-env-json='{json.dumps(runtime_env)}' "
+        + ("" if wait else "--no-wait ")
         + f"-- /bin/bash -c '{entrypoint}'"
     )
     result = os.system(ray_submit_cmd)
@@ -81,6 +83,12 @@ def main():
         required=True,
         help="Path to ray cli binary.",
     )
+    parser.add_argument(
+        "--wait",
+        default=False,
+        type=bool,
+        help="Whether to wait for the job to finish (and print logs). Default: True.",
+    )
     args, unknownargs = parser.parse_known_args()
 
     package_folder = os.path.join(args.nfs_packages_folder, uuid.uuid4().hex)
@@ -96,9 +104,8 @@ def main():
         package_folder=package_folder,
         input_entrypoint_file=args.input_entrypoint_file,
         unknownargs=unknownargs,
+        wait=args.wait,
     )
-
-    # TODO: Add feature to (not) keep following the job logs. Add --no-wait to command.
 
 
 if __name__ == "__main__":
