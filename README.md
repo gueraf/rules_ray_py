@@ -67,7 +67,7 @@ ray_job(
     # Must be visible to build machine and all workers.
     nfs_packages_folder = "/mnt/nfs/ray_bin/",
     # TODO: Change for your cluster.
-    ray_cluster_address = "ray://127.0.0.1:8265",
+    ray_cluster_address = "http://127.0.0.1:8265",
 )
 ```
 

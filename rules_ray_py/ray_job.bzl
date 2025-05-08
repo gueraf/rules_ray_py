@@ -9,7 +9,7 @@ def ray_job(
     nfs_packages_folder="/tmp",
     conda_bin_path="~/miniconda3/bin/conda",
     ray_bin_path="~/.local/bin/ray",
-    ray_cluster_address="ray://127.0.0.1:8265",
+    ray_cluster_address="http://127.0.0.1:8265",
 ):
     py_conda(
         name=name + "_ray_job_conda",
