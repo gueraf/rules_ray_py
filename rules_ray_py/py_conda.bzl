@@ -12,7 +12,8 @@ def conda_bin_symlink(name, conda_bin_path = None):
         srcs = [],
         outs = [name],
         # Filter down known_conda_bin_paths to first existing one and set symlink.
-        cmd = "ls -d -1 " + " ".join(known_conda_bin_paths) + " 2>/dev/null | head -n 1 | xargs -I {} ln -s {} $@",
+        # TODO: Debug why || true is needed.
+        cmd = "ls -d -1 " + " ".join(known_conda_bin_paths) + " 2>/dev/null | head -n 1 | xargs -I {} ln -s {} $@ || true",
     )
 
 def py_conda(name, wrapped_py_binary, conda_bin_path = None):
