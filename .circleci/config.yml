@@ -1,0 +1,29 @@
+version: 2.1
+
+jobs:
+  run_ray_example:
+    docker:
+      - image: gueraf/rules_ray_py_test:latest
+    steps:
+      - checkout
+      - run:
+          name: "Start ray cluster"
+          command: export RAY_CONDA_HOME=$(realpath ~/miniconda3/) && yes | ray start --head
+      - run:
+          name: "Update local_path_override"
+          command: |
+            sed -i 's|./rules_ray_py|"$(pwd)"|g' /tmp/rules_ray_py_test/MODULE.bazel && \
+            cat /tmp/rules_ray_py_test/MODULE.bazel
+      - run:
+          name: "examples/py_ray_hello_world:hello_world_ray_job"
+          command: |
+            cd /tmp/rules_ray_py_test/ && \
+            bazelisk build examples/py_ray_hello_world:hello_world_ray_job && \
+            until ray status | grep -q "1 node_"; do sleep 1; done && \
+            timeout 5m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - run_ray_example
