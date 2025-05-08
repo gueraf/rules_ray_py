@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run:
           name: "Start ray cluster"
-          command: export RAY_CONDA_HOME=$(realpath ~/miniconda3/) && yes | ray start --head
+          command: export RAY_CONDA_HOME=$(realpath ~/miniconda3/) && yes | ray start --head &
       - run:
           name: "Update local_path_override"
           command: |
