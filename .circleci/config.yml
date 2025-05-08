@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run:
           name: "Start ray cluster"
-          command: yes | ray start --head &
+          command: yes | ray start --head
       - run:
           name: "Update local_path_override"
           command: |
@@ -19,7 +19,6 @@ jobs:
           command: |
             cd /tmp/rules_ray_py_test/ && \
             bazelisk build examples/py_ray_hello_world:hello_world_ray_job && \
-            until ray status | grep -q "1 node_"; do sleep 1; done && \
             timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
 
 workflows:
