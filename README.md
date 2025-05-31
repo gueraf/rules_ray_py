@@ -57,7 +57,10 @@ load("@rules_ray_py//rules_ray_py:defs.bzl", "ray_job")
 py_binary(
     name = "main",
     srcs = ["main.py"],
-    deps = ["@pip//ray",],
+    deps = [
+      "@pip//fancy_lib",
+      "@pip//ray",
+    ],
 )
 
 # Setup: pipx install ray[default]==x.yy.z
