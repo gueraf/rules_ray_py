@@ -15,11 +15,10 @@ jobs:
             sed -i "s|./rules_ray_py|$(pwd)|g" /tmp/rules_ray_py_test/MODULE.bazel && \
             cat /tmp/rules_ray_py_test/MODULE.bazel
       - run:
-          name: "examples/py_ray_hello_world:hello_world_ray_job"
+          name: "Build examples/py_ray_hello_world:hello_world_ray_job"
           command: |
             cd /tmp/rules_ray_py_test/ && \
-            bazelisk build examples/py_ray_hello_world:hello_world_ray_job && \
-            timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
+            bazelisk build examples/py_ray_hello_world:hello_world_ray_job
       - run:
           name: "Wait for Ray cluster to be healthy"
           command: |
@@ -37,6 +36,11 @@ jobs:
               sleep 2
             done
             echo "Ray cluster is healthy!"
+      - run:
+          name: "Run examples/py_ray_hello_world:hello_world_ray_job"
+          command: |
+            cd /tmp/rules_ray_py_test/ && \
+            timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
       - run:
           name: "Collect Ray logs"
           command: |
