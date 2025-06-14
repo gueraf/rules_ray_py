@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   run_ray_example:
     machine:
-      image: ubuntu-2204
+      image: ubuntu-2204:current
     resource_class: large
     steps:
       - run:
