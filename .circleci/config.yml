@@ -18,7 +18,14 @@ jobs:
             echo "Checking if Ray cluster is accessible from host machine..."
             max_retries=30
             counter=0
-            until wget -q --spider --timeout=5 http://127.0.0.1:8265; do
+            while [ $counter -lt $max_retries ]; do
+              # Run wget with strict timeout and only one try
+              wget -q --timeout=3 --tries=1 --dns-timeout=3 --connect-timeout=3 --read-timeout=3 http://127.0.0.1:8265
+              if [ $? -eq 0 ]; then
+                # Success
+                break
+              fi
+              
               counter=$((counter + 1))
               if [ $counter -eq $max_retries ]; then
                 echo "Ray cluster failed to be accessible after $max_retries attempts."
