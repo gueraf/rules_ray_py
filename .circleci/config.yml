@@ -6,35 +6,6 @@ jobs:
       image: ubuntu-2204:current
     resource_class: large
     steps:
-      - run:
-          name: "Install apt dependencies"
-          command: |
-            sudo apt-get update && \
-            sudo apt-get install -y zstd git npm pipx && \
-            sudo npm install -g @bazel/bazelisk
-      - run:
-          name: "Install Bazelisk"
-          command: "sudo npm install -g @bazel/bazelisk"
-      - run:
-          name: "Install Miniconda"
-          command: |
-            wget "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh" -O /tmp/miniconda.sh && \
-            chmod +x /tmp/miniconda.sh && \
-            /tmp/miniconda.sh -b && \
-            rm /tmp/miniconda.sh && \
-            bash -c "source ~/miniconda3/bin/activate && \
-            true || ~/miniconda3/bin/conda init --all && \
-            ~/miniconda3/bin/conda config --add channels conda-forge && \
-            ~/miniconda3/bin/conda install -n base 'conda-package-handling>=2.4.0' conda-build"
-      - run:
-          name: "Install and initialize pyenv"
-          command: |
-            curl -fsSL https://pyenv.run | bash && \
-            ~/.pyenv/bin/pyenv install 3.12.3
-      - run:
-          name: "Install ray"
-          command: |
-            pipx install ray[default]==2.45.0 --python ~/.pyenv/versions/3.12.3/bin/python
       - checkout
       - run:
           name: "Start Ray container"
@@ -46,32 +17,34 @@ jobs:
             sed -i "s|./rules_ray_py|$(pwd)|g" /tmp/rules_ray_py_test/MODULE.bazel && \
             cat /tmp/rules_ray_py_test/MODULE.bazel
       - run:
-          name: "Build examples/py_ray_hello_world:hello_world_ray_job"
+          name: "Wait for Ray cluster to be healthy inside container"
+          command: |
+            docker run -it --rm \
+              gueraf/rules_ray_py_test:latest \
+              bash -c 'echo "Waiting for Ray cluster to be healthy..."; \
+              max_retries=30; \
+              counter=0; \
+              until ray status > /dev/null 2>&1; do \
+                counter=$((counter + 1)); \
+                if [ $counter -eq $max_retries ]; then \
+                  echo "Ray cluster failed to become healthy after $max_retries attempts."; \
+                  docker logs ray; \
+                  exit 1; \
+                fi; \
+                echo "Ray cluster not ready yet. Waiting (attempt $counter/$max_retries)..."; \
+                sleep 2; \
+              done; \
+              echo "Ray cluster is healthy!"'
+      - run:
+          name: "Run examples/py_ray_hello_world:hello_world_ray_job inside container"
           command: |
             cd /tmp/rules_ray_py_test/ && \
-            bazelisk build examples/py_ray_hello_world:hello_world_ray_job
-      - run:
-          name: "Wait for Ray cluster to be healthy"
-          command: |
-            echo "Waiting for Ray cluster to be healthy..."
-            max_retries=30
-            counter=0
-            until ray status > /dev/null 2>&1; do
-              counter=$((counter + 1))
-              if [ $counter -eq $max_retries ]; then
-                echo "Ray cluster failed to become healthy after $max_retries attempts."
-                docker logs ray  # Show the logs before failing
-                exit 1
-              fi
-              echo "Ray cluster not ready yet. Waiting (attempt $counter/$max_retries)..."
-              sleep 2
-            done
-            echo "Ray cluster is healthy!"
-      - run:
-          name: "Run examples/py_ray_hello_world:hello_world_ray_job"
-          command: |
-            cd /tmp/rules_ray_py_test/ && \
-            timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
+            docker run -it --rm \
+              -v $(pwd):/workspace \
+              -v /tmp/rules_ray_py_test:/tmp/rules_ray_py_test \
+              -w /workspace \
+              gueraf/rules_ray_py_test:latest \
+              timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
       - run:
           name: "Collect Ray logs"
           command: |
