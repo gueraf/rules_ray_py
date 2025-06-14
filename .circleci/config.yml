@@ -17,10 +17,26 @@ jobs:
       - run:
           name: "examples/py_ray_hello_world:hello_world_ray_job"
           command: |
-            ray status && \
             cd /tmp/rules_ray_py_test/ && \
             bazelisk build examples/py_ray_hello_world:hello_world_ray_job && \
             timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
+      - run:
+          name: "Wait for Ray cluster to be healthy"
+          command: |
+            echo "Waiting for Ray cluster to be healthy..."
+            max_retries=30
+            counter=0
+            until ray status > /dev/null 2>&1; do
+              counter=$((counter + 1))
+              if [ $counter -eq $max_retries ]; then
+                echo "Ray cluster failed to become healthy after $max_retries attempts."
+                ray status  # Show the actual status before failing
+                exit 1
+              fi
+              echo "Ray cluster not ready yet. Waiting (attempt $counter/$max_retries)..."
+              sleep 2
+            done
+            echo "Ray cluster is healthy!"
       - run:
           name: "Collect Ray logs"
           command: |
