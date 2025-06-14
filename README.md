@@ -96,7 +96,7 @@ rm /tmp/miniconda.sh && \
 bash -c "source ~/miniconda3/bin/activate && \
 true || ~/miniconda3/bin/conda init --all && \
 ~/miniconda3/bin/conda config --add channels conda-forge && \
-~/miniconda3/bin/conda install -n base conda-package-handling>=2.4.0 conda-build"
+~/miniconda3/bin/conda install -n base 'conda-package-handling>=2.4.0' conda-build"
 
 sudo apt install build-essential libssl-dev zlib1g-dev \
   libbz2-dev libreadline-dev libsqlite3-dev curl git \
