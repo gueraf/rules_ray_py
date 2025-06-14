@@ -4,6 +4,7 @@ jobs:
   run_ray_example:
     machine:
       image: ubuntu-2204:current
+      docker_layer_caching: true
     resource_class: large
     steps:
       - checkout
@@ -11,11 +12,6 @@ jobs:
           name: "Start Ray container"
           command: |
             docker run -d --name ray -p 8265:8265 -v /tmp:/tmp rayproject/ray:2.45.0-py312-cpu ray start --head --disable-usage-stats --block
-      - run:
-          name: "Update local_path_override"
-          command: |
-            sed -i "s|./rules_ray_py|$(pwd)|g" /tmp/rules_ray_py_test/MODULE.bazel && \
-            cat /tmp/rules_ray_py_test/MODULE.bazel
       - run:
           name: "Wait for Ray cluster to be healthy inside container"
           command: |
@@ -36,7 +32,7 @@ jobs:
               done; \
               echo "Ray cluster is healthy!"'
       - run:
-          name: "Run examples/py_ray_hello_world:hello_world_ray_job inside container"
+          name: "Run hello_world_ray_job"
           command: |
             cd /tmp/rules_ray_py_test/ && \
             docker run -it --rm \
@@ -44,7 +40,11 @@ jobs:
               -v /tmp/rules_ray_py_test:/tmp/rules_ray_py_test \
               -w /workspace \
               gueraf/rules_ray_py_test:latest \
-              timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
+              bash -c 'sed -i "s|./rules_ray_py|/workspace|g" /tmp/rules_ray_py_test/MODULE.bazel && \
+              echo "Updated MODULE.bazel:" && \
+              cat /tmp/rules_ray_py_test/MODULE.bazel && \
+              cd /tmp/rules_ray_py_test/ && \
+              timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true'
       - run:
           name: "Collect Ray logs"
           command: |
