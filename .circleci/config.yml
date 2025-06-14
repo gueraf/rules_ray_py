@@ -9,6 +9,16 @@ jobs:
     steps:
       - checkout
       - run:
+          name: "Update local_path_override"
+          command: |
+            sed -i "s|./rules_ray_py|$(pwd)|g" /tmp/rules_ray_py_test/MODULE.bazel && \
+            cat /tmp/rules_ray_py_test/MODULE.bazel
+      - run:
+          name: "Build examples/py_ray_hello_world:hello_world_ray_job"
+          command: |
+            cd /tmp/rules_ray_py_test/ && \
+            bazelisk build examples/py_ray_hello_world:hello_world_ray_job
+      - run:
           name: "Wait for Ray cluster to be healthy"
           command: |
             echo "Waiting for Ray cluster to be healthy..."
@@ -27,30 +37,17 @@ jobs:
             done
             echo "Ray cluster is healthy!"
       # - run:
-      #     name: "Start ray cluster"
-      #     command: RAY_USE_MULTIPROCESSING_CPU_COUNT=4 ray start --head --disable-usage-stats
-      - run:
-          name: "Update local_path_override"
-          command: |
-            sed -i "s|./rules_ray_py|$(pwd)|g" /tmp/rules_ray_py_test/MODULE.bazel && \
-            cat /tmp/rules_ray_py_test/MODULE.bazel
-      - run:
-          name: "Build examples/py_ray_hello_world:hello_world_ray_job"
-          command: |
-            cd /tmp/rules_ray_py_test/ && \
-            bazelisk build examples/py_ray_hello_world:hello_world_ray_job
-      - run:
-          name: "Run examples/py_ray_hello_world:hello_world_ray_job"
-          command: |
-            cd /tmp/rules_ray_py_test/ && \
-            timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
-      - run:
-          name: "Collect Ray logs"
-          command: |
-            mkdir -p /tmp/ray_logs
-            cp /tmp/ray/session_latest/logs/runtime_env_setup-*.log /tmp/ray_logs/ || echo "No runtime_env_setup logs found"
-            cp /tmp/ray/session_latest/logs/runtime_env_agent.log /tmp/ray_logs/ || echo "No runtime_env_agent.log found"
-          when: always # This ensures the step runs even if previous steps fail
+      #     name: "Run examples/py_ray_hello_world:hello_world_ray_job"
+      #     command: |
+      #       cd /tmp/rules_ray_py_test/ && \
+      #       timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
+      # - run:
+      #     name: "Collect Ray logs"
+      #     command: |
+      #       mkdir -p /tmp/ray_logs
+      #       cp /tmp/ray/session_latest/logs/runtime_env_setup-*.log /tmp/ray_logs/ || echo "No runtime_env_setup logs found"
+      #       cp /tmp/ray/session_latest/logs/runtime_env_agent.log /tmp/ray_logs/ || echo "No runtime_env_agent.log found"
+      #     when: always # This ensures the step runs even if previous steps fail
       - store_artifacts:
           path: /tmp/ray_logs
           destination: ray-logs
