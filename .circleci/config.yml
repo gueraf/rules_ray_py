@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run:
           name: "Start ray cluster"
-          command: ray start --head --disable-usage-stats
+          command: RAY_USE_MULTIPROCESSING_CPU_COUNT=4 ray start --head --disable-usage-stats
       - run:
           name: "Update local_path_override"
           command: |
