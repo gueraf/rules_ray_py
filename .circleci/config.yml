@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run:
           name: "Start ray cluster"
-          command: ray start --head
+          command: ray start --head --dashboard-host 0.0.0.0 --disable-usage-stats
       - run:
           name: "Update local_path_override"
           command: |
