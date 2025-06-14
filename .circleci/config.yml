@@ -25,7 +25,8 @@ jobs:
             echo "Waiting for Ray cluster to be healthy..."
             max_retries=30
             counter=0
-            until ray status > /dev/null 2>&1; do
+            # until ray status > /dev/null 2>&1; do
+            until wget 127.0.0.1:8265 > /dev/null 2>&1; do
               counter=$((counter + 1))
               if [ $counter -eq $max_retries ]; then
                 echo "Ray cluster failed to become healthy after $max_retries attempts."
