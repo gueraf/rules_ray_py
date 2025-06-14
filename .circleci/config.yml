@@ -2,12 +2,14 @@ version: 2.1
 
 jobs:
   run_ray_example:
-    docker:
-      - image: gueraf/rules_ray_py_test:latest
-      - image: rayproject/ray:2.45.0-py312-cpu
-        entrypoint: "ray start --head --disable-usage-stats --block"
+    machine:
+      image: gueraf/rules_ray_py_test:latest
     steps:
       - checkout
+      - run:
+          name: "Start Ray container"
+          command: |
+            docker run -d --name ray -p 8265:8265 -v /tmp:/tmp rayproject/ray:2.45.0-py312-cpu ray start --head --disable-usage-stats --block
       - run:
           name: "Update local_path_override"
           command: |
@@ -24,30 +26,30 @@ jobs:
             echo "Waiting for Ray cluster to be healthy..."
             max_retries=30
             counter=0
-            # until ray status > /dev/null 2>&1; do
-            until wget 127.0.0.1:8265 > /dev/null 2>&1; do
+            until ray status > /dev/null 2>&1; do
               counter=$((counter + 1))
               if [ $counter -eq $max_retries ]; then
                 echo "Ray cluster failed to become healthy after $max_retries attempts."
-                ray status  # Show the actual status before failing
+                docker logs ray  # Show the logs before failing
                 exit 1
               fi
               echo "Ray cluster not ready yet. Waiting (attempt $counter/$max_retries)..."
               sleep 2
             done
             echo "Ray cluster is healthy!"
-      # - run:
-      #     name: "Run examples/py_ray_hello_world:hello_world_ray_job"
-      #     command: |
-      #       cd /tmp/rules_ray_py_test/ && \
-      #       timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
-      # - run:
-      #     name: "Collect Ray logs"
-      #     command: |
-      #       mkdir -p /tmp/ray_logs
-      #       cp /tmp/ray/session_latest/logs/runtime_env_setup-*.log /tmp/ray_logs/ || echo "No runtime_env_setup logs found"
-      #       cp /tmp/ray/session_latest/logs/runtime_env_agent.log /tmp/ray_logs/ || echo "No runtime_env_agent.log found"
-      #     when: always # This ensures the step runs even if previous steps fail
+      - run:
+          name: "Run examples/py_ray_hello_world:hello_world_ray_job"
+          command: |
+            cd /tmp/rules_ray_py_test/ && \
+            timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
+      - run:
+          name: "Collect Ray logs"
+          command: |
+            mkdir -p /tmp/ray_logs
+            docker cp ray:/tmp/ray/session_latest/logs/runtime_env_setup-*.log /tmp/ray_logs/ || echo "No runtime_env_setup logs found"
+            docker cp ray:/tmp/ray/session_latest/logs/runtime_env_agent.log /tmp/ray_logs/ || echo "No runtime_env_agent.log found"
+            docker logs ray > /tmp/ray_logs/ray_container.log 2>&1 || echo "Could not capture Ray container logs"
+          when: always # This ensures the step runs even if previous steps fail
       - store_artifacts:
           path: /tmp/ray_logs
           destination: ray-logs
