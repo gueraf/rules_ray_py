@@ -4,21 +4,10 @@ jobs:
   run_ray_example:
     docker:
       - image: gueraf/rules_ray_py_test:latest
+      - image: rayproject/ray:2.45.0-py312-cpu
+        entrypoint: "ray start --head --disable-usage-stats --block"
     steps:
       - checkout
-      - run:
-          name: "Start ray cluster"
-          command: RAY_USE_MULTIPROCESSING_CPU_COUNT=4 ray start --head --disable-usage-stats
-      - run:
-          name: "Update local_path_override"
-          command: |
-            sed -i "s|./rules_ray_py|$(pwd)|g" /tmp/rules_ray_py_test/MODULE.bazel && \
-            cat /tmp/rules_ray_py_test/MODULE.bazel
-      - run:
-          name: "Build examples/py_ray_hello_world:hello_world_ray_job"
-          command: |
-            cd /tmp/rules_ray_py_test/ && \
-            bazelisk build examples/py_ray_hello_world:hello_world_ray_job
       - run:
           name: "Wait for Ray cluster to be healthy"
           command: |
@@ -37,6 +26,19 @@ jobs:
               sleep 2
             done
             echo "Ray cluster is healthy!"
+      # - run:
+      #     name: "Start ray cluster"
+      #     command: RAY_USE_MULTIPROCESSING_CPU_COUNT=4 ray start --head --disable-usage-stats
+      - run:
+          name: "Update local_path_override"
+          command: |
+            sed -i "s|./rules_ray_py|$(pwd)|g" /tmp/rules_ray_py_test/MODULE.bazel && \
+            cat /tmp/rules_ray_py_test/MODULE.bazel
+      - run:
+          name: "Build examples/py_ray_hello_world:hello_world_ray_job"
+          command: |
+            cd /tmp/rules_ray_py_test/ && \
+            bazelisk build examples/py_ray_hello_world:hello_world_ray_job
       - run:
           name: "Run examples/py_ray_hello_world:hello_world_ray_job"
           command: |
