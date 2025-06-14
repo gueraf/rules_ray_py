@@ -110,6 +110,10 @@ pipx install ray[default]==2.45.0 --python ~/.pyenv/versions/3.12.3/bin/python
 
 # Start a local ray cluster (for testing)
 ```shell
-export RAY_CONDA_HOME=$(realpath ~/miniconda3/) && ray start --head
+# Optional: Inside docker.
+docker run -p 8265:8265 -v /tmp:/tmp -it gueraf/rules_ray_py_test /bin/bash
+
+# Required: Start cluster.
+export RAY_CONDA_HOME=$(realpath ~/miniconda3/) && ray start --head --dashboard-host 0.0.0.0 --disable-usage-stats
 # Dashboard: 127.0.0.1:8265
 ```
