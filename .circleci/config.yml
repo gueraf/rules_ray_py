@@ -17,7 +17,24 @@ jobs:
       - run:
           name: "examples/py_ray_hello_world:hello_world_ray_job"
           command: |
+<<<<<<< HEAD
             RAY_ADDRESS='http://127.0.0.1:8265' ray job submit -- /bin/bash -c 'pwd'
+=======
+            ray status && \
+            cd /tmp/rules_ray_py_test/ && \
+            bazelisk build examples/py_ray_hello_world:hello_world_ray_job && \
+            timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
+      - run:
+          name: "Collect Ray logs"
+          command: |
+            mkdir -p /tmp/ray_logs
+            cp /tmp/ray/session_latest/logs/runtime_env_setup-*.log /tmp/ray_logs/ || echo "No runtime_env_setup logs found"
+            cp /tmp/ray/session_latest/logs/runtime_env_agent.log /tmp/ray_logs/ || echo "No runtime_env_agent.log found"
+          when: always # This ensures the step runs even if previous steps fail
+      - store_artifacts:
+          path: /tmp/ray_logs
+          destination: ray-logs
+>>>>>>> fbe57d7 (Store ray env setup log and print cluster status before submitting the job.)
 
 workflows:
   version: 2
