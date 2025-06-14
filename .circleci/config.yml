@@ -16,11 +16,12 @@ jobs:
           name: "Wait for Ray cluster to be healthy inside container"
           command: |
             docker run -it --rm \
+              --network host \
               gueraf/rules_ray_py_test:latest \
               bash -c 'echo "Waiting for Ray cluster to be healthy..."; \
               max_retries=30; \
               counter=0; \
-              until ray status > /dev/null 2>&1; do \
+              until ray status --address http://127.0.0.1:8265 > /dev/null 2>&1; do \
                 counter=$((counter + 1)); \
                 if [ $counter -eq $max_retries ]; then \
                   echo "Ray cluster failed to become healthy after $max_retries attempts."; \
@@ -36,15 +37,20 @@ jobs:
           command: |
             cd /tmp/rules_ray_py_test/ && \
             docker run -it --rm \
+              --network host \
               -v $(pwd):/workspace \
               -v /tmp/rules_ray_py_test:/tmp/rules_ray_py_test \
               -w /workspace \
+              -e RAY_ADDRESS="http://127.0.0.1:8265" \
               gueraf/rules_ray_py_test:latest \
               bash -c 'sed -i "s|./rules_ray_py|/workspace|g" /tmp/rules_ray_py_test/MODULE.bazel && \
               echo "Updated MODULE.bazel:" && \
               cat /tmp/rules_ray_py_test/MODULE.bazel && \
               cd /tmp/rules_ray_py_test/ && \
-              timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true'
+              git clean -fd && \
+              git reset --hard && \
+              git checkout HEAD && \
+              timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --ray_cluster_address=http://127.0.0.1:8265 --wait=true'
       - run:
           name: "Collect Ray logs"
           command: |
