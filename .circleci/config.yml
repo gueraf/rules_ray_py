@@ -44,7 +44,6 @@ jobs:
               --network host \
               -v $(pwd):/workspace \
               -v /tmp:/tmp \
-              -e RAY_ADDRESS="http://127.0.0.1:8265" \
               gueraf/rules_ray_py_test:latest \
               bash -c 'ray status && \
               sed -i "s|./rules_ray_py|/workspace|g" rules_ray_py_test/MODULE.bazel && \
