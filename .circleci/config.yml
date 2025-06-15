@@ -9,9 +9,14 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Start Ray container"
+          name: "Start Ray container in detached mode"
           command: |
             docker run -d --name ray -p 8265:8265 -v /tmp:/tmp rayproject/ray:2.45.0-py312-cpu ray start --head --disable-usage-stats --block --dashboard-host 127.0.0.1
+            echo "Ray container started in detached mode"
+            # echo "Showing initial Ray container logs:"
+            # docker logs -f ray &
+            # sleep 5
+            docker exec ray ray status
       # - run:
       #     name: "Wait for Ray cluster to be accessible from host machine"
       #     command: |
@@ -37,25 +42,24 @@ jobs:
       #       done
       #       echo "Ray cluster is accessible from host machine!"
       - run:
-          name: "Wait for Ray cluster to be healthy inside container"
+          name: "Verify Ray cluster is healthy"
           command: |
-            docker run -it --rm \
-              --network host \
-              gueraf/rules_ray_py_test:latest \
-              bash -c 'echo "Waiting for Ray cluster to be healthy..."; \
-              max_retries=30; \
-              counter=0; \
-              until ray status --address http://127.0.0.1:8265 > /dev/null 2>&1; do \
-                counter=$((counter + 1)); \
-                if [ $counter -eq $max_retries ]; then \
-                  echo "Ray cluster failed to become healthy after $max_retries attempts."; \
-                  docker logs ray; \
-                  exit 1; \
-                fi; \
-                echo "Ray cluster not ready yet. Waiting (attempt $counter/$max_retries)..."; \
-                sleep 2; \
-              done; \
-              echo "Ray cluster is healthy!"'
+            echo "Verifying Ray cluster is healthy..."
+            max_retries=30
+            counter=0
+            until docker exec ray ray status > /dev/null 2>&1; do
+              counter=$((counter + 1))
+              if [ $counter -eq $max_retries ]; then
+                echo "Ray cluster failed to become healthy after $max_retries attempts."
+                docker logs ray
+                exit 1
+              fi
+              echo "Ray cluster not ready yet. Waiting (attempt $counter/$max_retries)..."
+              sleep 2
+            done
+            echo "Ray cluster is healthy!"
+            echo "Full Ray cluster status:"
+            docker exec ray ray status
       - run:
           name: "Run hello_world_ray_job"
           command: |
