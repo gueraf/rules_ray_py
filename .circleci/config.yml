@@ -52,7 +52,8 @@ jobs:
               git clean -fd && \
               git reset --hard && \
               git checkout HEAD && \
-              timeout 2m bazelisk run examples/py_ray_torch:torch_main_ray_job -- --ray_cluster_address=http://127.0.0.1:8265 --wait=true'
+              bazelisk build examples/py_ray_torch:torch_main_ray_job && \
+              timeout 3m bazelisk run examples/py_ray_torch:torch_main_ray_job -- --ray_cluster_address=http://127.0.0.1:8265 --wait=true'
       - run:
           name: "Collect Ray logs"
           command: |
