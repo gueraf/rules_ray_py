@@ -40,7 +40,6 @@ jobs:
           name: "Run hello_world_ray_job"
           command: |
             docker run -it --rm \
-              --network host \
               -v $(pwd):/workspace \
               -v /tmp:/tmp \
               -p 8265:8265 \
