@@ -16,12 +16,12 @@ jobs:
       - run:
           name: "Start Ray container in detached mode"
           command: |
-            docker run -d --name ray --network host -v /tmp:/tmp --entrypoint bash rayproject/ray:2.45.0-py312-cpu -c "ray start --head --disable-usage-stats --block --dashboard-host 0.0.0.0"
+            docker run -d --name ray --network host -v /tmp:/tmp --entrypoint bash rayproject/ray:2.45.0-py312-cpu -c "pause infinity"
+            docker exec ray "ray start --head --disable-usage-stats --block --dashboard-host 0.0.0.0"
       - run:
           name: "Verify Ray cluster is healthy (ray container -> ray container)"
           command: |
             echo "Verifying Ray cluster is healthy..."
-            docker logs ray || echo "No logs available yet"
             max_retries=30
             counter=0
             until docker exec ray ray status > /dev/null 2>&1; do
