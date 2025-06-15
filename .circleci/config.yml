@@ -37,7 +37,7 @@ jobs:
             echo "Full Ray cluster status:"
             docker exec ray ray status
       - run:
-          name: "Run hello_world_ray_job"
+          name: "Run torch_main_ray_job"
           command: |
             docker run -it --rm \
               --network host \
@@ -52,7 +52,7 @@ jobs:
               git clean -fd && \
               git reset --hard && \
               git checkout HEAD && \
-              timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --ray_cluster_address=http://127.0.0.1:8265 --wait=true'
+              timeout 2m bazelisk run examples/py_ray_torch:torch_main_ray_job -- --ray_cluster_address=http://127.0.0.1:8265 --wait=true'
       - run:
           name: "Collect Ray logs"
           command: |
