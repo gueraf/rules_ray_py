@@ -4,7 +4,6 @@ jobs:
   run_ray_example:
     machine:
       image: ubuntu-2204:current
-      # docker_layer_caching: true
     resource_class: large
     steps:
       - checkout
@@ -57,10 +56,7 @@ jobs:
       - run:
           name: "Collect Ray logs"
           command: |
-            mkdir -p /tmp/ray_logs
-            docker cp ray:/tmp/ray/session_latest/logs/runtime_env_setup-*.log /tmp/ray_logs/ || echo "No runtime_env_setup logs found"
-            docker cp ray:/tmp/ray/session_latest/logs/runtime_env_agent.log /tmp/ray_logs/ || echo "No runtime_env_agent.log found"
-            docker logs ray > /tmp/ray_logs/ray_container.log 2>&1 || echo "Could not capture Ray container logs"
+            docker cp ray:/tmp/ray/session_latest/logs/ /tmp/ray_logs/ || echo "No logs found"
           when: always # This ensures the step runs even if previous steps fail
       - store_artifacts:
           path: /tmp/ray_logs
