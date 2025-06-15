@@ -10,12 +10,12 @@ jobs:
       - run:
           name: "Pull docker images"
           command: |
-            docker pull rayproject/ray:2.47.0-py312-cpu &
+            docker pull rayproject/ray:2.46.0-py312-cpu &
             docker pull gueraf/rules_ray_py_test:latest
       - run:
           name: "Start Ray container in detached mode"
           command: |
-            docker run -d --name ray --network host -v /tmp:/tmp --entrypoint bash rayproject/ray:2.47.0-py312-cpu -c "sleep infinity"
+            docker run -d --name ray --network host -v /tmp:/tmp --entrypoint bash rayproject/ray:2.46.0-py312-cpu -c "sleep infinity"
             docker exec ray ray start --head --disable-usage-stats --dashboard-host 127.0.0.1
       - run:
           name: "Verify Ray cluster is healthy (ray container -> ray container)"
