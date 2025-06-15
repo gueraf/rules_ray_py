@@ -10,7 +10,7 @@ jobs:
       - run:
           name: "Pull docker images"
           command: |
-            docker pull rayproject/ray:2.45.0-py312-cpu &
+            docker pull rayproject/ray:2.47.0-py312-cpu &
             docker pull gueraf/rules_ray_py_test:latest
       - run:
           name: "Start Ray container in detached mode"
