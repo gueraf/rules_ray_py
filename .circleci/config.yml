@@ -9,41 +9,14 @@ jobs:
     steps:
       - checkout
       - run:
+          name: "Pull docker images"
+          command: |
+            docker pull rayproject/ray:2.45.0-py312-cpu &
+            docker pull gueraf/rules_ray_py_test:latest
+      - run:
           name: "Start Ray container in detached mode"
           command: |
             docker run -d --name ray -p 8265:8265 -v /tmp:/tmp --entrypoint bash rayproject/ray:2.45.0-py312-cpu -c "ray start --head --disable-usage-stats --block"
-      - run:
-          name: "Wait for Ray to start"
-          command: |
-            sleep 10 # Wait for Ray to start
-            docker logs ray
-            # Verify container is still running
-            docker ps | grep ray || { echo "Ray container is not running!"; docker logs ray; exit 1; }
-            docker exec ray ray status
-      # - run:
-      #     name: "Wait for Ray cluster to be accessible from host machine"
-      #     command: |
-      #       echo "Checking if Ray cluster is accessible from host machine..."
-      #       max_retries=30
-      #       counter=0
-      #       while [ $counter -lt $max_retries ]; do
-      #         # Run wget with strict timeout and only one try
-      #         wget -q --timeout=3 --tries=1 --dns-timeout=3 --connect-timeout=3 --read-timeout=3 http://127.0.0.1:8265
-      #         if [ $? -eq 0 ]; then
-      #           # Success
-      #           break
-      #         fi
-
-      #         counter=$((counter + 1))
-      #         if [ $counter -eq $max_retries ]; then
-      #           echo "Ray cluster failed to be accessible after $max_retries attempts."
-      #           docker logs ray
-      #           exit 1
-      #         fi
-      #         echo "Ray cluster not accessible yet. Waiting (attempt $counter/$max_retries)..."
-      #         sleep 2
-      #       done
-      #       echo "Ray cluster is accessible from host machine!"
       - run:
           name: "Verify Ray cluster is healthy"
           command: |
@@ -66,18 +39,16 @@ jobs:
       - run:
           name: "Run hello_world_ray_job"
           command: |
-            cd /tmp/rules_ray_py_test/ && \
             docker run -it --rm \
               --network host \
               -v $(pwd):/workspace \
-              -v /tmp/rules_ray_py_test:/tmp/rules_ray_py_test \
-              -w /workspace \
+              -v /tmp:/tmp \
               -e RAY_ADDRESS="http://127.0.0.1:8265" \
               gueraf/rules_ray_py_test:latest \
-              bash -c 'sed -i "s|./rules_ray_py|/workspace|g" /tmp/rules_ray_py_test/MODULE.bazel && \
+              bash -c 'sed -i "s|./rules_ray_py|/workspace|g" rules_ray_py_test/MODULE.bazel && \
               echo "Updated MODULE.bazel:" && \
-              cat /tmp/rules_ray_py_test/MODULE.bazel && \
-              cd /tmp/rules_ray_py_test/ && \
+              cat rules_ray_py_test/MODULE.bazel && \
+              cd rules_ray_py_test/ && \
               git clean -fd && \
               git reset --hard && \
               git checkout HEAD && \
