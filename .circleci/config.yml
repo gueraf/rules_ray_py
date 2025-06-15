@@ -58,10 +58,14 @@ jobs:
           name: "Collect Ray logs"
           command: |
             docker cp ray:/tmp/ray/session_latest/logs/ /tmp/ray_logs/ || echo "No logs found"
+            docker cp ray:/tmp/ray/session_latest/runtime_resources/conda/ /tmp/conda/ || echo "No conda environment found"
           when: always # This ensures the step runs even if previous steps fail
       - store_artifacts:
           path: /tmp/ray_logs
           destination: ray-logs
+      - store_artifacts:
+          path: /tmp/conda/
+          destination: conda
 
 workflows:
   version: 2
