@@ -2,31 +2,61 @@ version: 2.1
 
 jobs:
   run_ray_example:
-    docker:
-      - image: gueraf/rules_ray_py_test:latest
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large
     steps:
       - checkout
       - run:
-          name: "Start ray cluster"
-          command: ray start --head --dashboard-host 127.0.0.1 --disable-usage-stats
-      - run:
-          name: "Update local_path_override"
+          name: "Pull docker images"
           command: |
-            sed -i "s|./rules_ray_py|$(pwd)|g" /tmp/rules_ray_py_test/MODULE.bazel && \
-            cat /tmp/rules_ray_py_test/MODULE.bazel
+            docker pull rayproject/ray:2.45.0-py312-cpu &
+            docker pull gueraf/rules_ray_py_test:latest
       - run:
-          name: "examples/py_ray_hello_world:hello_world_ray_job"
+          name: "Start Ray container in detached mode"
           command: |
-            ray status && \
-            cd /tmp/rules_ray_py_test/ && \
-            bazelisk build examples/py_ray_hello_world:hello_world_ray_job && \
-            timeout 2m bazelisk run examples/py_ray_hello_world:hello_world_ray_job -- --wait=true
+            docker run -d --name ray --network host -v /tmp:/tmp --entrypoint bash rayproject/ray:2.45.0-py312-cpu -c "sleep infinity"
+            docker exec ray ray start --head --disable-usage-stats --dashboard-host 127.0.0.1
+      - run:
+          name: "Verify Ray cluster is healthy (ray container -> ray container)"
+          command: |
+            echo "Verifying Ray cluster is healthy..."
+            max_retries=30
+            counter=0
+            until docker exec ray ray status > /dev/null 2>&1; do
+              counter=$((counter + 1))
+              if [ $counter -eq $max_retries ]; then
+                echo "Ray cluster failed to become healthy after $max_retries attempts."
+                docker logs ray
+                exit 1
+              fi
+              echo "Ray cluster not ready yet. Waiting (attempt $counter/$max_retries)..."
+              sleep 2
+            done
+            echo "Ray cluster is healthy!"
+            echo "Full Ray cluster status:"
+            docker exec ray ray status
+      - run:
+          name: "Run torch_main_ray_job"
+          command: |
+            docker run -it --rm \
+              --network host \
+              -v $(pwd):/workspace \
+              -v /tmp:/tmp \
+              gueraf/rules_ray_py_test:latest \
+              bash -c 'ray status && \
+              sed -i "s|./rules_ray_py|/workspace|g" rules_ray_py_test/MODULE.bazel && \
+              echo "Updated MODULE.bazel:" && \
+              cat rules_ray_py_test/MODULE.bazel && \
+              cd rules_ray_py_test/ && \
+              git clean -fd && \
+              git reset --hard && \
+              git checkout HEAD && \
+              timeout 2m bazelisk run examples/py_ray_torch:torch_main_ray_job -- --ray_cluster_address=http://127.0.0.1:8265 --wait=true'
       - run:
           name: "Collect Ray logs"
           command: |
-            mkdir -p /tmp/ray_logs
-            cp /tmp/ray/session_latest/logs/runtime_env_setup-*.log /tmp/ray_logs/ || echo "No runtime_env_setup logs found"
-            cp /tmp/ray/session_latest/logs/runtime_env_agent.log /tmp/ray_logs/ || echo "No runtime_env_agent.log found"
+            docker cp ray:/tmp/ray/session_latest/logs/ /tmp/ray_logs/ || echo "No logs found"
           when: always # This ensures the step runs even if previous steps fail
       - store_artifacts:
           path: /tmp/ray_logs
