@@ -46,7 +46,8 @@ jobs:
               -p 8265:8265 \
               -e RAY_ADDRESS="http://127.0.0.1:8265" \
               gueraf/rules_ray_py_test:latest \
-              bash -c 'sed -i "s|./rules_ray_py|/workspace|g" rules_ray_py_test/MODULE.bazel && \
+              bash -c 'ray status && \
+              sed -i "s|./rules_ray_py|/workspace|g" rules_ray_py_test/MODULE.bazel && \
               echo "Updated MODULE.bazel:" && \
               cat rules_ray_py_test/MODULE.bazel && \
               cd rules_ray_py_test/ && \
