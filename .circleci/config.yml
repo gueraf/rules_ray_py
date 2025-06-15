@@ -16,7 +16,7 @@ jobs:
       - run:
           name: "Start Ray container in detached mode"
           command: |
-            docker run -d --name ray -p 8265:8265 -v /tmp:/tmp --entrypoint bash rayproject/ray:2.45.0-py312-cpu -c "ray start --head --disable-usage-stats --block"
+            docker run -d --name ray --network host -v /tmp:/tmp --entrypoint bash rayproject/ray:2.45.0-py312-cpu -c "ray start --head --disable-usage-stats --block"
       - run:
           name: "Verify Ray cluster is healthy"
           command: |
@@ -40,9 +40,9 @@ jobs:
           name: "Run hello_world_ray_job"
           command: |
             docker run -it --rm \
+              --network host \
               -v $(pwd):/workspace \
               -v /tmp:/tmp \
-              -p 8265:8265 \
               -e RAY_ADDRESS="http://127.0.0.1:8265" \
               gueraf/rules_ray_py_test:latest \
               bash -c 'ray status && \
