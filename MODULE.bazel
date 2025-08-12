@@ -4,4 +4,4 @@ module(
 )
 
 bazel_dep(name = "aspect_rules_py", version = "1.6.1")
-bazel_dep(name = "rules_python", version = "1.5.2")
+bazel_dep(name = "rules_python", version = "1.5.3")
